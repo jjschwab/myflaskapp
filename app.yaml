@@ -1,0 +1,13 @@
+runtime: python39
+instance_class: F4_1G  # Consider if intensive processing is needed
+
+entrypoint: gunicorn -b :$PORT --timeout 1000 app:app  # Ensure this matches your Flask setup
+
+env_variables:
+  # Define static environment variables as needed
+
+handlers:
+- url: /static
+  static_dir: static
+- url: /.*
+  script: auto

@@ -1,0 +1,11 @@
+pytube
+scenedetect[opencv]
+numpy
+torch
+torchvision
+git+https://github.com/openai/CLIP.git
+matplotlib
+moviepy
+git+https://github.com/ytdl-org/youtube-dl.git
+Flask
+gunicorn
