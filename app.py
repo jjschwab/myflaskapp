@@ -23,7 +23,10 @@ def process_video():
 
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
-    description_phrases = ["Action scene", "Quiet moment", "Intense moment"]  # Example set of phrases
+    description_phrases = ["Mountain biker doing a downhill run", "Rider jumping over an obstacle", "Cyclist on a rocky trail", "Biking through forest trails", "MTB stunt on a dirt path",
+            "Close-up of a mountain bike wheel", "Mountain biker navigating a sharp turn", "First-person view of a bike ride", "Mountain biker doing a trick jump", "Biking fast down a steep incline",
+            "Biker with a helmet on talking to the camera", "People standing around", "a person facing and talking to the camera", "Introducing the context for a video", "a zoomed out scene of nature without any people in it",
+            "Scene showing a mountain biking terrain park", "Biker taking it easy going down a hill", "mountain Biker falling and crashing", "People walking outside", "Context scene with mountain bikers not performing any tricks"]  # Example set of phrases
     scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
 
     results = []
