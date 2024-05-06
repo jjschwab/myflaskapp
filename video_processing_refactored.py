@@ -20,7 +20,7 @@ logging.getLogger('moviepy').setLevel(logging.ERROR)
 logging.getLogger('pyscenedetect').setLevel(logging.ERROR)
 
 # Define base directory for saving files (adjust as per deployment environment)
-BASE_DIRECTORY = "/tmp"
+BASE_DIRECTORY = "static/videos"
 
 def download_video(url):
     yt = YouTube(url)
