@@ -23,14 +23,20 @@ def process_video():
 
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
+    description_phrases = ["Action scene", "Quiet moment", "Intense moment"]  # Example set of phrases
+    scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
 
     results = []
-    for scene_id, scene_data in scene_frames.items():
-        encoded_image = base64.b64encode(cv2.imencode('.jpg', scene_data['first_frame'])[1]).decode()
+    for scene_id, scene_info in scene_categories.items():
+        encoded_image = base64.b64encode(cv2.imencode('.jpg', scene_info['first_frame'])[1]).decode()
         results.append({
             'scene_id': scene_id,
-            'start_time': str(scene_data['start_time']),
-            'end_time': str(scene_data['end_time']),
+            'category': scene_info['category'],
+            'confidence': scene_info['confidence'],
+            'start_time': scene_info['start_time'],
+            'end_time': scene_info['end_time'],
+            'duration': scene_info['duration'],
+            'best_description': scene_info['best_description'],
             'image': encoded_image
         })
 
