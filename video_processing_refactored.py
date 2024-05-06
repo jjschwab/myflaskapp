@@ -61,6 +61,7 @@ def extract_frames(video_path, scene_list):
                     first_frame = frame
                 frames.append(frame)
         scene_frames[i] = {'start_time': start_time, 'end_time': end_time, 'frames': frames, 'first_frame': first_frame}
+        print(f"Extracted frames for scene {i}: First frame type: {type(first_frame)}, Total frames extracted: {len(frames)}")
     cap.release()
     return scene_frames
 
@@ -71,29 +72,41 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
     action_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     context_indices = list(set(range(len(description_texts))) - set(action_indices))
 
-    for scene_id, (start_time, end_time, frames, first_frame) in scene_frames.items():
+    for scene_id, scene_data in scene_frames.items():
+        frames = scene_data['frames']
+        first_frame = scene_data['first_frame']
+
+        # Debug output to verify the type of the first_frame
+        if not isinstance(first_frame, np.ndarray):
+            print(f"Error: First frame for scene {scene_id} is not a numpy array. Type: {type(first_frame)}")
+            continue  # Skip this scene if the first frame is not a numpy array
+
         scene_scores = [0] * len(description_texts)
         valid_frames = 0
 
         for frame in frames:
-            image = Image.fromarray(frame[..., ::-1])
-            image_input = preprocess(image).unsqueeze(0).to(device)
-            with torch.no_grad():
-                text_inputs = clip.tokenize(description_texts).to(device)
-                text_features = model.encode_text(text_inputs)
-                image_features = model.encode_image(image_input)
-                logits = (image_features @ text_features.T).squeeze()
-                probs = logits.softmax(dim=0)
-                scene_scores = [sum(x) for x in zip(scene_scores, probs.tolist())]
-                valid_frames += 1
+            try:
+                image = Image.fromarray(frame[..., ::-1])
+                image_input = preprocess(image).unsqueeze(0).to(device)
+                with torch.no_grad():
+                    text_inputs = clip.tokenize(description_texts).to(device)
+                    text_features = model.encode_text(text_inputs)
+                    image_features = model.encode_image(image_input)
+                    logits = (image_features @ text_features.T).squeeze()
+                    probs = logits.softmax(dim=0)
+                    scene_scores = [sum(x) for x in zip(scene_scores, probs.tolist())]
+                    valid_frames += 1
+            except Exception as e:
+                print(f"An error occurred while processing frame: {e}")
+                continue
 
         if valid_frames > 0:
             scene_scores = [score / valid_frames for score in scene_scores]
             action_confidence = sum(scene_scores[i] for i in action_indices) / len(action_indices)
             context_confidence = sum(scene_scores[i] for i in context_indices) / len(context_indices)
 
-            best_description_index = scene_scores.index(max(scene_scores))  # Index of the best matching description
-            best_description = description_texts[best_description_index]  # Best matching description text
+            best_description_index = scene_scores.index(max(scene_scores))
+            best_description = description_texts[best_description_index]
 
             if action_confidence > context_confidence:
                 category = "Action Scene"
@@ -102,15 +115,15 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
                 category = "Context Scene"
                 confidence = context_confidence
 
-            duration = end_time.get_seconds() - start_time.get_seconds()  # Calculate duration in seconds
+            duration = scene_data['end_time'].get_seconds() - scene_data['start_time'].get_seconds()
             scene_categories[scene_id] = {
                 "category": category,
                 "confidence": confidence,
-                "start_time": str(start_time),
-                "end_time": str(end_time),
+                "start_time": str(scene_data['start_time']),
+                "end_time": str(scene_data['end_time']),
                 "duration": duration,
-                "first_frame": first_frame,
-                "best_description": best_description  # Storing the best description
+                "first_frame": first_frame,  # Assuming first_frame is already handled as numpy array
+                "best_description": best_description
             }
 
     return scene_categories
