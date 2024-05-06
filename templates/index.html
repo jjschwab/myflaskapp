@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
-        label, input, button, select { margin: 10px 0; }
+        label, input, button, select, a { margin: 10px 0; display: block; }
         #results { margin-top: 20px; }
     </style>
 </head>
@@ -22,11 +22,13 @@
 
     <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
+    <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             document.getElementById('results').innerHTML = 'Processing video...';
+            document.getElementById('downloadLink').style.display = 'none';  // Hide the download link initially
 
             try {
                 const response = await fetch('/process_video', {
@@ -38,6 +40,11 @@
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="${data.output_path}"></video>`;
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = data.output_path;
+                    downloadLink.download = "final_video.mp4";  // Suggest a filename for download
+                    downloadLink.textContent = 'Download Video';
+                    downloadLink.style.display = 'block';  // Show the download link
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
