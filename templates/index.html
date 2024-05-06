@@ -22,6 +22,8 @@
 
     <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
+
+    <!-- Link to download the video -->
     <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
@@ -34,15 +36,15 @@
                 const response = await fetch('/process_video', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl, selected_scenes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]})
+                    body: JSON.stringify({video_url: videoUrl})
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="${data.output_path}"></video>`;
+                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
                     const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = data.output_path;
-                    downloadLink.download = "final_video.mp4";  // Suggest a filename for download
+                    downloadLink.href = `/static/videos/${data.video_filename}`;
+                    downloadLink.download = data.video_filename;  // Suggest a filename for download
                     downloadLink.textContent = 'Download Video';
                     downloadLink.style.display = 'block';  // Show the download link
                 } else {
