@@ -67,10 +67,11 @@ def extract_frames(video_path, scene_list):
 def classify_and_categorize_scenes(scene_frames, description_phrases):
     scene_categories = {}
     description_texts = description_phrases
-    action_indices = range(len(description_texts))
 
-    for scene_id, scene_data in scene_frames.items():
-        frames = scene_data['frames']
+    action_indices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    context_indices = list(set(range(len(description_texts))) - set(action_indices))
+
+    for scene_id, (start_time, end_time, frames, first_frame) in scene_frames.items():
         scene_scores = [0] * len(description_texts)
         valid_frames = 0
 
@@ -82,22 +83,34 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
                 text_features = model.encode_text(text_inputs)
                 image_features = model.encode_image(image_input)
                 logits = (image_features @ text_features.T).squeeze()
-                scene_scores = [sum(x) for x in zip(scene_scores, logits.softmax(dim=0).tolist())]
+                probs = logits.softmax(dim=0)
+                scene_scores = [sum(x) for x in zip(scene_scores, probs.tolist())]
                 valid_frames += 1
 
         if valid_frames > 0:
             scene_scores = [score / valid_frames for score in scene_scores]
-            best_description_index = scene_scores.index(max(scene_scores))
-            best_description = description_texts[best_description_index]
+            action_confidence = sum(scene_scores[i] for i in action_indices) / len(action_indices)
+            context_confidence = sum(scene_scores[i] for i in context_indices) / len(context_indices)
 
+            best_description_index = scene_scores.index(max(scene_scores))  # Index of the best matching description
+            best_description = description_texts[best_description_index]  # Best matching description text
+
+            if action_confidence > context_confidence:
+                category = "Action Scene"
+                confidence = action_confidence
+            else:
+                category = "Context Scene"
+                confidence = context_confidence
+
+            duration = end_time.get_seconds() - start_time.get_seconds()  # Calculate duration in seconds
             scene_categories[scene_id] = {
-                'category': 'Action' if scene_scores[best_description_index] > 0.5 else 'Context',
-                'confidence': max(scene_scores),
-                'start_time': str(scene_data['start_time']),
-                'end_time': str(scene_data['end_time']),
-                'duration': scene_data['end_time'].get_seconds() - scene_data['start_time'].get_seconds(),
-                'first_frame': ndarray_to_base64(scene_data['first_frame']) if 'first_frame' in scene_data else None,
-                'best_description': best_description
+                "category": category,
+                "confidence": confidence,
+                "start_time": str(start_time),
+                "end_time": str(end_time),
+                "duration": duration,
+                "first_frame": first_frame,
+                "best_description": best_description  # Storing the best description
             }
 
     return scene_categories
