@@ -42,8 +42,12 @@
                     htmlContent += `
                         <div>
                             <p>Scene: ${scene.scene_id}</p>
+                            <p>Category: ${scene.category}</p>
+                            <p>Confidence: ${scene.confidence.toFixed(2)}</p>
                             <p>Start Time: ${scene.start_time}</p>
                             <p>End Time: ${scene.end_time}</p>
+                            <p>Duration: ${scene.duration.toFixed(2)} seconds</p>
+                            <p>Description: ${scene.best_description}</p>
                             <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
                         </div>`;
                 });
