@@ -26,6 +26,12 @@ app.secret_key = 'bt\xcd\xc5\xf1\xbf19\xed\x86\xe5\xc2Y\x01\xb3\x8eh\xff\x9a\x9b
   # Necessary for session management
 
 
+def ndarray_to_base64(ndarray):
+    """Converts an ndarray to a base64 encoded string."""
+    _, buffer = cv2.imencode('.jpg', ndarray)
+    jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+    return jpg_as_text
+
 @app.route('/submit_video', methods=['POST'])
 def submit_video():
     data = request.get_json()
@@ -50,7 +56,7 @@ def submit_video():
                 else:
                     app.logger.info(f"No conversion needed for {key}.")
 
-        return jsonify(result.tolist())
+        return jsonify(result)
     except Exception as e:
         app.logger.error(f"Error processing video: {str(e)}")
         return jsonify({'error': str(e)}), 500

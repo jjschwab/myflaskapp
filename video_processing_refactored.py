@@ -8,6 +8,7 @@ from scenedetect import VideoManager, SceneManager
 from scenedetect.detectors import ContentDetector
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
 import logging
+import base64
 
 # Load CLIP model
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,6 +28,13 @@ def download_video(url):
         return stream.download(output_path=BASE_DIRECTORY)
     else:
         return None
+
+def image_to_base64(image):
+    _, buffer = cv2.imencode('.jpg', image)
+    jpg_as_text = base64.b64encode(buffer).decode('utf-8')
+    return jpg_as_text
+
+
 
 def find_scenes(video_path):
     video_manager = VideoManager([video_path])
@@ -88,9 +96,12 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
                 'start_time': str(scene_data['start_time']),
                 'end_time': str(scene_data['end_time']),
                 'duration': scene_data['end_time'].get_seconds() - scene_data['start_time'].get_seconds(),
-                'first_frame': scene_data['first_frame'],
+                "first_frame": first_frame,
                 'best_description': best_description
             }
+	if 'first_frame' in scene_data:
+            scene_data['first_frame'] = ndarray_to_base64(scene_data['first_frame'])
+
 
     return scene_categories
 
