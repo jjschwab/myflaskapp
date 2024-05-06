@@ -36,27 +36,31 @@ def ndarray_to_base64(ndarray):
 def submit_video():
     data = request.get_json()
     if not data:
-        app.logger.error("No data received")
         return jsonify({'error': 'No data received'}), 400
 
-    # Dummy data processing function that simulates processing that returns ndarrays
-    def process_video():
-        # Simulating an ndarray that might be returned from a video processing function
-        return {'frames': np.zeros((100, 100, 3), dtype=np.uint8)}
+    video_url = data.get('video_url')
+    category_choice = data.get('category_choice')
+    user_descriptions = data.get('user_descriptions', [])
+
+    if not video_url or not category_choice:
+        return jsonify({'error': "Missing data: 'video_url' or 'category_choice' not provided"}), 400
 
     try:
-        result = process_video()
+        video_path = vp.download_video(video_url)
+        if not video_path:
+            return jsonify({'error': 'Failed to download video.'}), 400
 
-        # Checking and converting all ndarray objects in the result
-        if isinstance(result, dict):
-            for key, value in result.items():
+        scenes = vp.find_scenes(video_path)
+        scene_frames = vp.extract_frames(video_path, scenes)
+        scene_categories = vp.classify_and_categorize_scenes(scene_frames, user_descriptions + ["Additional phrases"])
+
+        # Ensure all data is serializable
+        for scene_id, category in scene_categories.items():
+            for key, value in category.items():
                 if isinstance(value, np.ndarray):
-                    result[key] = ndarray_to_base64(value)
-                    app.logger.info(f"Converted {key} to base64 string.")
-                else:
-                    app.logger.info(f"No conversion needed for {key}.")
+                    _, buffer = cv2.imencode('.jpg', value)
+                    category[key] = base64.b64encode(buffer).decode('utf-8')
 
-        return jsonify(result)
+        return jsonify(scene_categories)
     except Exception as e:
-        app.logger.error(f"Error processing video: {str(e)}")
         return jsonify({'error': str(e)}), 500
