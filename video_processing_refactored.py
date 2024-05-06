@@ -99,7 +99,7 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
                 "first_frame": first_frame,
                 'best_description': best_description
             }
-	if 'first_frame' in scene_data:
+	      if 'first_frame' in scene_data:
             scene_data['first_frame'] = ndarray_to_base64(scene_data['first_frame'])
 
 
