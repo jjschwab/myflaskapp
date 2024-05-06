@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Processing Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        form { margin-bottom: 20px; }
+        label, input, button { margin: 10px 0; }
+        #results { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Video Processing Portal</h1>
+    <form id="videoForm">
+        <label for="videoUrl">Enter YouTube video URL:</label>
+        <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
+        <button type="submit">Submit Video</button>
+    </form>
+    <div id="results">Results will appear here...</div>
+    <script>
+        document.getElementById('videoForm').onsubmit = async function(e) {
+            e.preventDefault(); 
+            const videoUrl = document.getElementById('videoUrl').value;
+            document.getElementById('results').innerHTML = 'Processing...';
+
+            try {
+                const response = await fetch('/process_video', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({video_url: videoUrl})
+                });
+
+                if (response.ok) {
+                    const scenes = await response.json();
+                    let content = '<h2>Scenes:</h2>';
+                    scenes.forEach((scene, index) => {
+                        content += `<p>Scene ${index + 1}: Start - ${scene.start_time}, End - ${scene.end_time}</p>`;
+                    });
+                    document.getElementById('results').innerHTML = content;
+                } else {
+                    document.getElementById('results').innerHTML = 'Failed to process video.';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Error: ' + error.message;
+            }
+        };
+    </script>
+</body>
+</html>
