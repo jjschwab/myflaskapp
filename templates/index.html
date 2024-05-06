@@ -8,24 +8,23 @@
         form { margin-bottom: 20px; }
         label, input, button, select { margin: 10px 0; }
         #results { margin-top: 20px; }
-        img { width: 300px; margin: 10px; }
     </style>
 </head>
 <body>
     <h1>Video Processing Portal</h1>
-    <!-- Form to submit video URL -->
+
+    <!-- Form to submit video information -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
-        <button type="submit">Submit Video</button>
+        <button type="button" onclick="processVideo()">Process Video</button>
     </form>
 
     <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
 
     <script>
-        document.getElementById('videoForm').onsubmit = async function(e) {
-            e.preventDefault(); // Prevent default form submission
+        async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             document.getElementById('results').innerHTML = 'Processing video...';
 
@@ -33,30 +32,20 @@
                 const response = await fetch('/process_video', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl})
+                    body: JSON.stringify({video_url: videoUrl, selected_scenes: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]})
                 });
 
                 if (response.ok) {
-                    const scenes = await response.json();
-                    let content = '<h2>Top 10 Best Scenes</h2>';
-                    scenes.forEach((scene, index) => {
-                        content += `<div>
-                                        <h3>Scene ${index + 1}</h3>
-                                        <p>Category: ${scene.category}</p>
-                                        <p>Confidence: ${scene.confidence.toFixed(2)}</p>
-                                        <p>Duration: ${scene.duration} seconds</p>
-                                        <p>Description: ${scene.best_description}</p>
-                                        <img src="data:image/jpeg;base64,${scene.first_frame}" alt="Scene Image">
-                                    </div>`;
-                    });
-                    document.getElementById('results').innerHTML = content;
+                    const data = await response.json();
+                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="${data.output_path}"></video>`;
                 } else {
-                    document.getElementById('results').innerHTML = 'Error: ' + await response.text();
+                    const errorText = await response.text();
+                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
                 }
             } catch (error) {
                 document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
             }
-        };
+        }
     </script>
 </body>
 </html>
