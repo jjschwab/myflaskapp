@@ -9,6 +9,7 @@ from scenedetect.detectors import ContentDetector
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
 import logging
 import base64
+import numpy as np
 
 # Load CLIP model
 device = "cuda" if torch.cuda.is_available() else "cpu"
