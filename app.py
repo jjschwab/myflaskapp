@@ -17,10 +17,10 @@ def process_video():
 
         scenes = vp.find_scenes(video_path)
         scene_frames = vp.extract_frames(video_path, scenes)
-        scene_categories = vp.classify_and_categorize_scenes(scene_frames, ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
+        scene_categories = vp.classify_and_categorize_scenes(scene_frames, [""Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
             "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
             "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
-            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"])
+            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video""])
 
         # Filter scenes selected by the user and ensure they exist
         clip_paths = [
@@ -40,7 +40,5 @@ def process_video():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
