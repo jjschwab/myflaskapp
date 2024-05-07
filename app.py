@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify, render_template, url_for
 import video_processing_refactored as vp
-import json
 import os
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='/static')
@@ -29,7 +28,17 @@ def process_video():
     if not scene_frames:
         return jsonify({'error': 'Failed to extract frames'}), 500
 
-    first_scene_info = next(iter(scene_frames.values()))
+    # Integrate scene categorization
+    description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
+            "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
+            "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
+            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"]  # Simplified example, adjust as necessary
+    scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
+    if not scene_categories:
+        return jsonify({'error': 'Failed to categorize scenes'}), 500
+
+    # Assuming we use the first categorized scene for simplification
+    first_scene_info = next(iter(scene_categories.values()))
     saved_clip = vp.save_clip(video_path, first_scene_info, os.path.join(app.static_folder, 'videos'), 1)
     
     if not saved_clip:
@@ -40,3 +49,4 @@ def process_video():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
