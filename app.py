@@ -32,10 +32,10 @@ def process_video():
 
     # Mock descriptions based on category choice for demo
     description_phrases = {
-        "1": ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
+        "1": [""Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
             "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
             "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
-            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"],  # Example phrases for categories
+            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video""],  # Example phrases for categories
         "2": ["Dramatic scene description"],
         "3": ["Calm scene description"]
     }
@@ -44,10 +44,12 @@ def process_video():
     top_scenes = sorted(categorized_scenes.values(), key=lambda x: x['duration'], reverse=True)[:10]  # Get top 10 longest scenes
     
     clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(top_scenes)]
-    final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
+    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
 
-    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path)})
+    if 'path' not in final_video_info:
+        return jsonify({'error': 'Failed to process final video'}), 500
 
+    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_info['path'])})
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
     return send_from_directory(app.static_folder, filename, as_attachment=True)

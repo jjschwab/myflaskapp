@@ -139,27 +139,19 @@ def add_text_with_opencv(frame, text, font_scale=2.0, font=cv2.FONT_HERSHEY_COMP
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
     return frame
 
-def process_video(clip_paths, output_path, caption=None, audio_path=None):
-    clips = [VideoFileClip(path) for path in clip_paths]
+def process_video(clip_paths, output_path):
+    if not clip_paths:
+        return {"error": "No clips to process"}
+    
+    clips = [VideoFileClip(path) for path in clip_paths if os.path.exists(path)]
+    if not clips:
+        return {"error": "No valid clips found"}
+
     final_clip = concatenate_videoclips(clips, method="compose")
-
-    if caption:
-        final_clip = final_clip.fl_image(lambda image: add_text_with_opencv(image, caption))
-
-    if audio_path:
-        audio_clip = AudioFileClip(audio_path).set_duration(final_clip.duration)
-        final_clip = final_clip.set_audio(audio_clip)
-
     final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac', verbose=False)
     final_clip.close()
-    return {"status": "success", "message": f"Video processing complete. Output saved to: {output_path}"}
-
-def convert_timestamp_to_seconds(timestamp):
-    """Convert a timestamp in HH:MM:SS format to seconds."""
-    if isinstance(timestamp, str):
-        h, m, s = map(float, timestamp.split(':'))
-        return int(h) * 3600 + int(m) * 60 + s
-    return timestamp
+    
+    return {"path": output_path}
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
@@ -169,7 +161,6 @@ def save_clip(video_path, scene_info, output_directory, scene_id):
     output_filepath = os.path.join(output_directory, output_filename)
     
     try:
-        # Convert string timestamps to seconds if necessary
         start_seconds = convert_timestamp_to_seconds(scene_info['start_time'])
         end_seconds = convert_timestamp_to_seconds(scene_info['end_time'])
     
@@ -215,5 +206,9 @@ def main():
         print(f"Error processing video: {str(e)}")
 
 
+def convert_timestamp_to_seconds(timestamp):
+    """Convert a timestamp in HH:MM:SS format to seconds."""
+    h, m, s = map(float, timestamp.split(':'))
+    return int(h) * 3600 + int(m) * 60 + s
 
 
