@@ -155,17 +155,30 @@ def process_video(clip_paths, output_path, caption=None, audio_path=None):
     return {"status": "success", "message": f"Video processing complete. Output saved to: {output_path}"}
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
+    # Ensure the output directory exists
+    os.makedirs(output_directory, exist_ok=True)
+    
     output_filename = f"scene_{scene_id+1}_{scene_info['category'].replace(' ', '_')}.mp4"
     output_filepath = os.path.join(output_directory, output_filename)
+    
+    try:
+        start_seconds = convert_timestamp_to_seconds(scene_info['start_time'])
+        end_seconds = convert_timestamp_to_seconds(scene_info['end_time'])
+    
+        video_clip = VideoFileClip(video_path).subclip(start_seconds, end_seconds)
+        video_clip.write_videofile(output_filepath, codec='libx264', audio_codec='aac', verbose=False, logger=None)
+        video_clip.close()
 
-    start_seconds = convert_timestamp_to_seconds(scene_info['start_time'])
-    end_seconds = convert_timestamp_to_seconds(scene_info['end_time'])
+        # Check if the file was actually created
+        if not os.path.exists(output_filepath):
+            logging.error(f"Failed to save the clip at {output_filepath}")
+            return None
 
-    video_clip = VideoFileClip(video_path).subclip(start_seconds, end_seconds)
-    video_clip.write_videofile(output_filepath, codec='libx264', audio_codec='aac')
-    video_clip.close()
-
-    return {"path": output_filepath, "first_frame": scene_info['first_frame']}
+        return {"path": output_filepath, "first_frame": scene_info['first_frame']}
+    
+    except Exception as e:
+        logging.error(f"An error occurred while saving the clip: {e}")
+        return None
 
 def main():
     video_url = "https://example.com/path/to/video"
