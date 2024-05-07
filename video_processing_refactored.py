@@ -158,7 +158,7 @@ def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
     os.makedirs(output_directory, exist_ok=True)
     
-    output_filename = f"scene_{scene_id+1}_{scene_info['category'].replace(' ', '_')}.mp4"
+    output_filename = f"scene_{scene_id+1}.mp4"
     output_filepath = os.path.join(output_directory, output_filename)
     
     try:
