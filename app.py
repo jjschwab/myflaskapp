@@ -18,6 +18,7 @@ def process_video():
     try:
         video_path = vp.download_video(video_url)
         if not video_path:
+            app.logger.error("Failed to download video.")
             return jsonify({'error': 'Failed to download video.'}), 400
 
         scenes = vp.find_scenes(video_path)
@@ -27,14 +28,20 @@ def process_video():
             "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
             "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"])
 
-        # Filter scenes selected by the user and ensure they exist
-        clip_paths = [
-            vp.save_clip(video_path, scene_categories[idx], 'static/videos', idx)['path']
-            for idx in selected_indices
-            if idx in scene_categories
-        ]
+        # Ensure that selected scenes are valid and can be processed
+        clip_paths = []
+        for idx in selected_indices:
+            if idx in scene_categories:
+                clip_info = vp.save_clip(video_path, scene_categories[idx], 'static/videos', idx)
+                if clip_info:
+                    clip_paths.append(clip_info['path'])
+                else:
+                    app.logger.error(f"Failed to save clip for scene {idx}")
+            else:
+                app.logger.warning(f"Selected scene index {idx} is not in scene_categories")
 
         if not clip_paths:
+            app.logger.error("No valid clips were selected or could be saved.")
             return jsonify({'error': 'No valid clips selected or clips could not be saved.'}), 404
 
         output_path = os.path.join('static/videos', 'final_concatenated_clip.mp4')
@@ -43,8 +50,8 @@ def process_video():
         return jsonify({'message': 'Video processed successfully', 'video_filename': 'final_concatenated_clip.mp4'})
 
     except Exception as e:
+        app.logger.error(f"Exception during video processing: {e}")
         return jsonify({'error': str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
