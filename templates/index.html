@@ -7,7 +7,8 @@
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
         label, input, button, select, a { margin: 10px 0; display: block; }
-        #results { margin-top: 20px; }
+        #results, #sceneSelection { margin-top: 20px; }
+        .scene { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -17,39 +18,70 @@
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
-        <label for="categoryChoice">Select Video Category:</label>
-        <select id="categoryChoice">
-            <option value="1">Mountain Biking</option>
-            <option value="2">Skiing</option>
-            <option value="3">Surfing</option>
-        </select>
         <button type="button" onclick="processVideo()">Process Video</button>
     </form>
 
     <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
+
+    <!-- Section to display best scenes and choose for concatenation -->
+    <div id="sceneSelection"></div>
+    <button type="button" onclick="finalizeVideo()" style="display:none;">Concatenate Selected Scenes</button>
+
+    <!-- Link to download the video -->
     <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
-            const categoryChoice = document.getElementById('categoryChoice').value;
             document.getElementById('results').innerHTML = 'Processing video...';
-            document.getElementById('downloadLink').style.display = 'none';
+            document.getElementById('downloadLink').style.display = 'none';  // Hide the download link initially
 
             try {
                 const response = await fetch('/process_video', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl, category_choice: categoryChoice})
+                    body: JSON.stringify({video_url: videoUrl})
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayScenes(data.scenes);
+                    document.querySelector('button[type="button"]').style.display = 'block';
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
+            }
+        }
+
+        function displayScenes(scenes) {
+            const sceneContainer = document.getElementById('sceneSelection');
+            sceneContainer.innerHTML = scenes.map((scene, index) => `
+                <div class="scene">
+                    <input type="checkbox" id="scene${index}" name="scene" value="${index}">
+                    <label for="scene${index}">Scene ${index + 1}: Duration ${scene.duration} seconds, Start: ${scene.start_time}, End: ${scene.end_time}, Description: ${scene.best_description}</label>
+                </div>
+            `).join('');
+        }
+
+        async function finalizeVideo() {
+            const selectedScenes = Array.from(document.querySelectorAll('input[name="scene"]:checked')).map(input => parseInt(input.value));
+            try {
+                const response = await fetch('/finalize_video', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({selected_indices: selectedScenes})
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
                     const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = `/downloads/${data.video_filename}`;
-                    downloadLink.download = data.video_filename;
+                    downloadLink.href = `/static/videos/${data.video_filename}`;
+                    downloadLink.download = data.video_filename;  // Suggest a filename for download
                     downloadLink.textContent = 'Download Video';
                     downloadLink.style.display = 'block';
                 } else {
