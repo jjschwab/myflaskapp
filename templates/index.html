@@ -12,25 +12,18 @@
 </head>
 <body>
     <h1>Video Processing Portal</h1>
-
-    <!-- Form to submit video information -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
         <button type="button" onclick="processVideo()">Process Video</button>
     </form>
-
-    <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
-
-    <!-- Link to download the video -->
     <a id="downloadLink" style="display:none;">Download Video</a>
-
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             document.getElementById('results').innerHTML = 'Processing video...';
-            document.getElementById('downloadLink').style.display = 'none';  // Hide the download link initially
+            document.getElementById('downloadLink').style.display = 'none';
 
             try {
                 const response = await fetch('/process_video', {
@@ -44,9 +37,9 @@
                     document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
                     const downloadLink = document.getElementById('downloadLink');
                     downloadLink.href = `/static/videos/${data.video_filename}`;
-                    downloadLink.download = data.video_filename;  // Suggest a filename for download
+                    downloadLink.download = data.video_filename;
                     downloadLink.textContent = 'Download Video';
-                    downloadLink.style.display = 'block';  // Show the download link
+                    downloadLink.style.display = 'block';
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
