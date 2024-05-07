@@ -17,25 +17,21 @@ def process_video():
     if not video_url:
         return jsonify({'error': 'Video URL is missing'}), 400
     
-    # Download video
     video_path = vp.download_video(video_url)
     if not video_path:
         return jsonify({'error': 'Failed to download video'}), 500
 
-    # Find scenes
     scenes = vp.find_scenes(video_path)
     if not scenes:
         return jsonify({'error': 'No scenes detected'}), 500
 
-    # Extract frames
     scene_frames = vp.extract_frames(video_path, scenes)
     if not scene_frames:
         return jsonify({'error': 'Failed to extract frames'}), 500
 
-    # Save just the first scene to simplify
     first_scene_info = next(iter(scene_frames.values()))
-    saved_clip = vp.save_clip(video_path, first_scene_info, app.static_folder + '/videos', 1)
-    
+    saved_clip = vp.save_clip(video_path, first_scene_info, os.path.join(app.static_folder, 'videos'), 0)
+
     if not saved_clip:
         return jsonify({'error': 'No valid clips were selected or could be saved.'}), 500
     
