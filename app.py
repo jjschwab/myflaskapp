@@ -60,10 +60,9 @@ def process_video():
         'end_time': scene['end_time'],
         'description': scene['best_description'],
         'first_frame': base64.b64encode(cv2.imencode('.jpg', scene['first_frame'])[1]).decode()
-    } 
-    for scene in best_clips:
-        return jsonify(scene_details)
+    } for scene in best_clips]
 
+    return jsonify(scene_details)
 
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
