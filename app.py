@@ -99,15 +99,22 @@ def concatenate_clips():
     top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
     
     try:
-        clip_paths = [vp.save_clip(video_path, top_action_scenes[int(index)]['frames'], os.path.join(app.static_folder, 'videos'), int(index))['path'] for index in selected_indices if 0 <= int(index) < len(top_action_scenes)]
-    except IndexError:
-        return jsonify({'error': 'Selected index out of range'}), 400
+        clip_paths = []
+        for index in selected_indices:
+            index = int(index)  # Ensure index is an integer
+            if index < 0 or index >= len(top_action_scenes):
+                return jsonify({'error': f'Index {index} out of range'}), 400
+            scene_info = top_action_scenes[index]
+            clip_info = vp.save_clip(video_path, scene_info, os.path.join(app.static_folder, 'videos'), index)
+            if clip_info is None:
+                return jsonify({'error': 'Failed to save some clips'}), 500
+            clip_paths.append(clip_info['path'])
+     except Exception as e:
+         return jsonify({'error': str(e)}), 500
 
-    if not clip_paths:
-        return jsonify({'error': 'No valid clips selected or clips could not be saved.'}), 500
-
-    final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))['path']
-    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path)})
+     final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
+     if 'path' not in final_video_path:
+         return jsonify({'error': 'Failed to process final video'}), 500
 
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
