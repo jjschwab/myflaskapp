@@ -5,7 +5,6 @@ import os
 import cv2
 import base64
 
-
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
 @app.route('/')
@@ -26,10 +25,7 @@ def process_video():
 
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
-    description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
-            "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
-            "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
-            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"]  # Example set of phrases
+    description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", ...]  # Your set of phrases
     scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
 
     results = []
@@ -46,23 +42,11 @@ def process_video():
             'image': encoded_image
         })
 
-    return jsonify(results)
+    # Selecting top action scenes
+    action_scenes = [scene for scene in results if scene['category'] == 'Action Scene']
+    top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:10]
 
-
-@app.route('/concatenate_clips', methods=['POST'])
-def concatenate_clips():
-    data = request.get_json()
-    selected_indices = data.get('selected_indices')
-    video_path = data.get('video_path')
-
-    clips_info = [scene for i, scene in enumerate(best_clips) if i in selected_indices]
-    clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), i)['path'] for i, scene in enumerate(clips_info)]
-
-    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
-    if 'path' not in final_video_info:
-        return jsonify({'error': 'Failed to process final video'}), 500
-
-    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_info['path'])})
+    return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
 
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
