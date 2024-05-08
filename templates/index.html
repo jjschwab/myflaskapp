@@ -8,12 +8,12 @@
         form { margin-bottom: 20px; }
         label, input, button, select, a { margin: 10px 0; display: block; }
         #results { margin-top: 20px; }
+        .scene { margin-bottom: 20px; }
+        .scene img { width: 320px; height: 240px; }
     </style>
 </head>
 <body>
     <h1>Video Processing Portal</h1>
-
-    <!-- Form to submit video information -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
@@ -25,17 +25,13 @@
         </select>
         <button type="button" onclick="processVideo()">Process Video</button>
     </form>
-
-    <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
-    <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             const categoryChoice = document.getElementById('categoryChoice').value;
             document.getElementById('results').innerHTML = 'Processing video...';
-            document.getElementById('downloadLink').style.display = 'none';
 
             try {
                 const response = await fetch('/process_video', {
@@ -45,13 +41,20 @@
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
-                    const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = `/downloads/${data.video_filename}`;
-                    downloadLink.download = data.video_filename;
-                    downloadLink.textContent = 'Download Video';
-                    downloadLink.style.display = 'block';
+                    const scenes = await response.json();
+                    document.getElementById('results').innerHTML = '';
+                    scenes.forEach(scene => {
+                        const sceneElement = document.createElement('div');
+                        sceneElement.className = 'scene';
+                        sceneElement.innerHTML = `
+                            <h3>Scene ${scene.scene_number}</h3>
+                            <p>Duration: ${scene.duration}s</p>
+                            <p>Start: ${scene.start_time}, End: ${scene.end_time}</p>
+                            <p>Description: ${scene.description}</p>
+                            <img src="data:image/jpeg;base64,${scene.first_frame}" alt="Scene Frame">
+                        `;
+                        document.getElementById('results').appendChild(sceneElement);
+                    });
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
@@ -63,4 +66,3 @@
     </script>
 </body>
 </html>
-
