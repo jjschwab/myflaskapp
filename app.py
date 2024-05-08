@@ -48,9 +48,12 @@ def process_video():
     }
 
     categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases[category_choice])
-    top_scenes = sorted(categorized_scenes.values(), key=lambda x: x['duration'], reverse=True)[:10]  # Get top 10 longest scenes
+
+    action_scenes = [scene for scene in categorized_scenes.values() if scene['category'] == 'Action Scene']
+    top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:10]
+    best_clips = sorted(top_action_scenes, key=lambda x: x['duration'], reverse=True)[:10]
     
-    clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(top_scenes)]
+    clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(best_clips)]
     final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
 
     if 'path' not in final_video_info:
