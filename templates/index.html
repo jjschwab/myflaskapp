@@ -12,17 +12,26 @@
 </head>
 <body>
     <h1>Video Processing Portal</h1>
+
+    <!-- Form to submit video URL -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" required placeholder="https://">
         <button type="submit">Process Video</button>
     </form>
+
+    <!-- Section to display all scenes -->
     <div id="results"></div>
+
+    <!-- Section to display the top 10 action scenes -->
+    <div id="topActionScenes"></div>
+
     <script>
         document.getElementById('videoForm').onsubmit = async function(e) {
             e.preventDefault();
             const videoUrl = document.getElementById('videoUrl').value;
             document.getElementById('results').innerHTML = 'Processing... Please wait.';
+            document.getElementById('topActionScenes').innerHTML = ''; // Clear previous top scenes
 
             const response = await fetch('/process_video', {
                 method: 'POST',
@@ -32,7 +41,7 @@
 
             if (response.ok) {
                 const data = await response.json();
-                let htmlContent = 'All Scenes Found:<br>';
+                let htmlContent = '<h2>All Scenes:</h2>';
                 data.all_scenes.forEach(scene => {
                     htmlContent += `
                         <div>
@@ -46,9 +55,12 @@
                             <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
                         </div>`;
                 });
-                htmlContent += '<h2>Top 10 Action Scenes:</h2>';
+                document.getElementById('results').innerHTML = htmlContent;
+
+                // Display top action scenes
+                let topScenesContent = '<h2>Top 10 Action Scenes:</h2>';
                 data.top_action_scenes.forEach(scene => {
-                    htmlContent += `
+                    topScenesContent += `
                         <div>
                             <p>Scene: ${scene.scene_id}</p>
                             <p>Category: ${scene.category}</p>
@@ -60,15 +72,12 @@
                             <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
                         </div>`;
                 });
-                document.getElementById('results').innerHTML = htmlContent;
+                document.getElementById('topActionScenes').innerHTML = topScenesContent;
             } else {
                 document.getElementById('results').innerHTML = 'Failed to process video.';
+                document.getElementById('topActionScenes').innerHTML = ''; // Clear if there's an error
             }
         };
-    </script>
-</body>
-</html>
-
     </script>
 </body>
 </html>
