@@ -7,9 +7,8 @@
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
         label, input, button, select, a { margin: 10px 0; display: block; }
-        #results, #scenes { margin-top: 20px; }
-        .scene { margin-bottom: 20px; }
-        .scene img { width: 320px; height: 240px; }
+        #results { margin-top: 20px; }
+        #clipsSection { margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -25,16 +24,28 @@
         </select>
         <button type="button" onclick="processVideo()">Process Video</button>
     </form>
+
+    <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
-    <h2>Top 10 Best Video Clips:</h2> <!-- Header for the top video clips section -->
-    <div id="scenes"></div> <!-- Dedicated div for displaying scenes -->
+
+    <!-- Section to display the top 10 best clips -->
+    <div id="clipsSection"></div>
+
+    <!-- Section for user to select clips for concatenation -->
+    <div id="concatSection" style="display:none;">
+        <label for="clipIndices">Enter indices of clips to concatenate (e.g., 1,3,5):</label>
+        <input type="text" id="clipIndices" name="clipIndices" placeholder="1,2,3...">
+        <button type="button" onclick="concatenateClips()">Concatenate Clips</button>
+    </div>
+
+    <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             const categoryChoice = document.getElementById('categoryChoice').value;
             document.getElementById('results').innerHTML = 'Processing video...';
-            document.getElementById('scenes').innerHTML = ''; // Clear previous scenes
+            document.getElementById('downloadLink').style.display = 'none';
 
             try {
                 const response = await fetch('/process_video', {
@@ -44,20 +55,46 @@
                 });
 
                 if (response.ok) {
-                    const scenes = await response.json();
-                    scenes.forEach(scene => {
-                        const sceneElement = document.createElement('div');
-                        sceneElement.className = 'scene';
-                        sceneElement.innerHTML = `
-                            <h3>Scene ${scene.scene_number}</h3>
-                            <p>Duration: ${scene.duration}s</p>
-                            <p>Start: ${scene.start_time}, End: ${scene.end_time}</p>
-                            <p>Description: ${scene.description}</p>
-                            <img src="data:image/jpeg;base64,${scene.first_frame}" alt="Scene Frame">
-                        `;
-                        document.getElementById('scenes').appendChild(sceneElement);
-                    });
-                    document.getElementById('results').innerHTML = ''; // Clear the 'processing' message
+                    const data = await response.json();
+                    displayClips(data.clips);
+                } else {
+                    const errorText = await response.text();
+                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
+            }
+        }
+
+        function displayClips(clips) {
+            const clipsSection = document.getElementById('clipsSection');
+            clipsSection.innerHTML = '<h2>Top 10 best video clips:</h2>';
+            clips.forEach((clip, index) => {
+                clipsSection.innerHTML += `<div>Clip ${index + 1}: Scene Number ${clip.scene_number}, Duration: ${clip.duration}s, Start: ${clip.start_time}, End: ${clip.end_time}, Description: '${clip.best_description}'</div>`;
+            });
+            document.getElementById('concatSection').style.display = 'block';
+        }
+
+        async function concatenateClips() {
+            const clipIndices = document.getElementById('clipIndices').value.split(',').map(Number);
+            const videoUrl = document.getElementById('videoUrl').value;
+            document.getElementById('results').innerHTML = 'Concatenating selected clips...';
+
+            try {
+                const response = await fetch('/concatenate_clips', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({video_url: videoUrl, selected_indices: clipIndices})
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
+                    const downloadLink = document.getElementById('downloadLink');
+                    downloadLink.href = `/downloads/${data.video_filename}`;
+                    downloadLink.download = data.video_filename;  // Suggest a filename for download
+                    downloadLink.textContent = 'Download Video';
+                    downloadLink.style.display = 'block';
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
@@ -69,4 +106,3 @@
     </script>
 </body>
 </html>
-
