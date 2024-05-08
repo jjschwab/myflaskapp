@@ -53,8 +53,15 @@ def process_video():
     top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:10]
     best_clips = sorted(top_action_scenes, key=lambda x: x['duration'], reverse=True)[:10]
 
-    if best_clips:
-        return jsonify(best_clips[0])
+    Scene_info=[]
+    for index, scene in enumerate(best_clips):
+            scene_number = list(categorized_scenes.keys())[list(categorized_scenes.values()).index(scene)] + 1
+            print(f"Clip {index + 1}: Scene Number {scene_number}, Duration: {scene['duration']}s, Start: {scene['start_time']}, End: {scene['end_time']}, Best Description: '{scene['best_description']}'")
+            Scene_info.append(scene_number)
+    if Scene_info:
+        return jsonify(Scene_info.tolist())
+
+    
     clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(best_clips)]
     final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
 
