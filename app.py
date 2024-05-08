@@ -73,13 +73,31 @@ def concatenate_clips():
     video_path = vp.download_video(video_url)
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
+    
     description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
             "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
             "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
             "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"]  # Assume some descriptions
+    
     categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
-    top_action_scenes = sorted([scene for scene in categorized_scenes if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
+    
+    results = []
+    
+    for scene_id, scene_info in categorized_scenes.items():
+        encoded_image = base64.b64encode(cv2.imencode('.jpg', scene_info['first_frame'])[1]).decode()
+        results.append({
+            'scene_id': scene_id,
+            'category': scene_info['category'],
+            'confidence': scene_info['confidence'],
+            'start_time': scene_info['start_time'],
+            'end_time': scene_info['end_time'],
+            'duration': scene_info['duration'],
+            'best_description': scene_info['best_description'],
+            'image': encoded_image
+        })
 
+    top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
+    
     try:
         clip_paths = [vp.save_clip(video_path, top_action_scenes[int(index)]['frames'], os.path.join(app.static_folder, 'videos'), int(index))['path'] for index in selected_indices if 0 <= int(index) < len(top_action_scenes)]
     except IndexError:
