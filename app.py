@@ -60,8 +60,7 @@ def process_video():
 
     # Store top action scenes in session
     top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
-    session['top_action_scenes'] = top_action_scenes
-    session['video_path'] = video_path  # Store video path for later use
+    
 
     return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
 
