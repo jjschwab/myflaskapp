@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
-        label, input, button { margin: 10px 0; }
+        label, input, button, select { margin: 10px 0; }
         img { margin-top: 10px; width: 100%; max-width: 300px; }
     </style>
 </head>
@@ -17,6 +17,15 @@
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" required placeholder="https://">
+
+        <!-- Dropdown for selecting video category -->
+        <label for="categoryChoice">Select Video Category:</label>
+        <select id="categoryChoice">
+            <option value="1">Mountain Biking</option>
+            <option value="2">Skiing</option>
+            <option value="3">Surfing</option>
+        </select>
+
         <button type="submit">Process Video</button>
     </form>
 
@@ -30,13 +39,14 @@
         document.getElementById('videoForm').onsubmit = async function(e) {
             e.preventDefault();
             const videoUrl = document.getElementById('videoUrl').value;
+            const categoryChoice = document.getElementById('categoryChoice').value; // Get the selected category
             document.getElementById('results').innerHTML = 'Processing... Please wait.';
             document.getElementById('topActionScenes').innerHTML = ''; // Clear previous top scenes
 
             const response = await fetch('/process_video', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ video_url: videoUrl })
+                body: JSON.stringify({ video_url: videoUrl, category_choice: categoryChoice })
             });
 
             if (response.ok) {
