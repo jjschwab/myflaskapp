@@ -109,8 +109,8 @@ def concatenate_clips():
             if clip_info is None:
                 return jsonify({'error': 'Failed to save some clips'}), 500
             clip_paths.append(clip_info['path'])
-     except Exception as e:
-         return jsonify({'error': str(e)}), 500
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
      final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
      if 'path' not in final_video_path:
