@@ -53,7 +53,7 @@ def process_video():
     top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:20]
     best_clips = sorted(top_action_scenes, key=lambda x: x['duration'], reverse=True)[:10]
 
-     scene_details = [{
+    scene_details = [{
         'scene_number': list(categorized_scenes.keys())[list(categorized_scenes.values()).index(scene)] + 1,
         'duration': scene['duration'],
         'start_time': scene['start_time'],
