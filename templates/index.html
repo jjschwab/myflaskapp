@@ -6,103 +6,60 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
-        label, input, button, select, a { margin: 10px 0; display: block; }
-        #results { margin-top: 20px; }
-        #clipsSection { margin-top: 20px; }
+        label, input, button { margin: 10px 0; }
+        img { margin-top: 10px; width: 100%; max-width: 300px; }
     </style>
 </head>
 <body>
     <h1>Video Processing Portal</h1>
+
+    <!-- Form to submit video URL -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
-        <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
-        <label for="categoryChoice">Select Video Category:</label>
-        <select id="categoryChoice">
-            <option value="1">Mountain Biking</option>
-            <option value="2">Skiing</option>
-            <option value="3">Surfing</option>
-        </select>
-        <button type="button" onclick="processVideo()">Process Video</button>
+        <input type="text" id="videoUrl" required placeholder="https://">
+        <button type="submit">Process Video</button>
     </form>
 
-    <!-- Section to display results or status -->
-    <div id="results">Results will appear here...</div>
-
-    <!-- Section to display the top 10 best clips -->
-    <div id="clipsSection"></div>
-
-    <!-- Section for user to select clips for concatenation -->
-    <div id="concatSection" style="display:none;">
-        <label for="clipIndices">Enter indices of clips to concatenate (e.g., 1,3,5):</label>
-        <input type="text" id="clipIndices" name="clipIndices" placeholder="1,2,3...">
-        <button type="button" onclick="concatenateClips()">Concatenate Clips</button>
-    </div>
-
-    <a id="downloadLink" style="display:none;">Download Video</a>
+    <!-- Section to display results -->
+    <div id="results"></div>
 
     <script>
-        async function processVideo() {
+        document.getElementById('videoForm').onsubmit = async function(e) {
+            e.preventDefault();
             const videoUrl = document.getElementById('videoUrl').value;
-            const categoryChoice = document.getElementById('categoryChoice').value;
-            document.getElementById('results').innerHTML = 'Processing video...';
-            document.getElementById('downloadLink').style.display = 'none';
+            document.getElementById('results').innerHTML = 'Processing... Please wait.';
 
-            try {
-                const response = await fetch('/process_video', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl, category_choice: categoryChoice})
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    displayClips(data.clips);
-                } else {
-                    const errorText = await response.text();
-                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
-                }
-            } catch (error) {
-                document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
-            }
-        }
-
-        function displayClips(clips) {
-            const clipsSection = document.getElementById('clipsSection');
-            clipsSection.innerHTML = '<h2>Top 10 best video clips:</h2>';
-            clips.forEach((clip, index) => {
-                clipsSection.innerHTML += `<div>Clip ${index + 1}: Scene Number ${clip.scene_number}, Duration: ${clip.duration}s, Start: ${clip.start_time}, End: ${clip.end_time}, Description: '${clip.best_description}'</div>`;
+            const response = await fetch('/process_video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ video_url: videoUrl })
             });
-            document.getElementById('concatSection').style.display = 'block';
-        }
 
-        async function concatenateClips() {
-            const clipIndices = document.getElementById('clipIndices').value.split(',').map(Number);
-            const videoUrl = document.getElementById('videoUrl').value;
-            document.getElementById('results').innerHTML = 'Concatenating selected clips...';
-
-            try {
-                const response = await fetch('/concatenate_clips', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl, selected_indices: clipIndices})
+            if (response.ok) {
+                const data = await response.json();
+                let htmlContent = 'Scenes Found:<br>';
+                data.forEach(scene => {
+                    htmlContent += `
+                        <div>
+                            <p>Scene: ${scene.scene_id}</p>
+                            <p>Category: ${scene.category}</p>
+                            <p>Confidence: ${scene.confidence.toFixed(2)}</p>
+                            <p>Start Time: ${scene.start_time}</p>
+                            <p>End Time: ${scene.end_time}</p>
+                            <p>Duration: ${scene.duration.toFixed(2)} seconds</p>
+                            <p>Description: ${scene.best_description}</p>
+                            <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
+                        </div>`;
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
-                    const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = `/downloads/${data.video_filename}`;
-                    downloadLink.download = data.video_filename;  // Suggest a filename for download
-                    downloadLink.textContent = 'Download Video';
-                    downloadLink.style.display = 'block';
-                } else {
-                    const errorText = await response.text();
-                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
-                }
-            } catch (error) {
-                document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
+                document.getElementById('results').innerHTML = htmlContent;
+            } else {
+                document.getElementById('results').innerHTML = 'Failed to process video.';
             }
-        }
+        };
+    </script>
+</body>
+</html>
+
     </script>
 </body>
 </html>
