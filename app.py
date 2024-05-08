@@ -59,7 +59,7 @@ def process_video():
         'duration': scene['duration'],
         'start_time': scene['start_time'],
         'end_time': scene['end_time'],
-        'description': scene['best_description'],
+        'best_description': scene['best_description'],
         'first_frame': base64.b64encode(cv2.imencode('.jpg', scene['first_frame'])[1]).decode()
     } for scene in best_clips]
 
