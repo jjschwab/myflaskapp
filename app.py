@@ -3,6 +3,8 @@ import video_processing_refactored as vp
 import json
 import os
 import cv2
+import base64
+
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
