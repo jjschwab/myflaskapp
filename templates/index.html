@@ -7,7 +7,7 @@
         body { font-family: Arial, sans-serif; padding: 20px; }
         form { margin-bottom: 20px; }
         label, input, button, select, a { margin: 10px 0; display: block; }
-        #results { margin-top: 20px; }
+        #results, #scenes { margin-top: 20px; }
         .scene { margin-bottom: 20px; }
         .scene img { width: 320px; height: 240px; }
     </style>
@@ -27,12 +27,14 @@
     </form>
     <div id="results">Results will appear here...</div>
     <h2>Top 10 Best Video Clips:</h2> <!-- Header for the top video clips section -->
+    <div id="scenes"></div> <!-- Dedicated div for displaying scenes -->
 
     <script>
         async function processVideo() {
             const videoUrl = document.getElementById('videoUrl').value;
             const categoryChoice = document.getElementById('categoryChoice').value;
             document.getElementById('results').innerHTML = 'Processing video...';
+            document.getElementById('scenes').innerHTML = ''; // Clear previous scenes
 
             try {
                 const response = await fetch('/process_video', {
@@ -43,7 +45,6 @@
 
                 if (response.ok) {
                     const scenes = await response.json();
-                    document.getElementById('results').innerHTML = '';
                     scenes.forEach(scene => {
                         const sceneElement = document.createElement('div');
                         sceneElement.className = 'scene';
@@ -54,8 +55,9 @@
                             <p>Description: ${scene.description}</p>
                             <img src="data:image/jpeg;base64,${scene.first_frame}" alt="Scene Frame">
                         `;
-                        document.getElementById('results').appendChild(sceneElement);
+                        document.getElementById('scenes').appendChild(sceneElement);
                     });
+                    document.getElementById('results').innerHTML = ''; // Clear the 'processing' message
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
@@ -67,3 +69,4 @@
     </script>
 </body>
 </html>
+
