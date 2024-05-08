@@ -54,7 +54,7 @@ def process_video():
     best_clips = sorted(top_action_scenes, key=lambda x: x['duration'], reverse=True)[:10]
 
     if best_clips:
-        return "test"
+        return jsonify(best_clips[0])
     clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(best_clips)]
     final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
 
