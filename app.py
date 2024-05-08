@@ -55,7 +55,8 @@ def process_video():
             'end_time': scene_info['end_time'],
             'duration': scene_info['duration'],
             'best_description': scene_info['best_description'],
-            'image': encoded_image
+            'first_frame': scene_info['first_frame']  # Keep the raw frame for processing
+
         })
 
     # Store top action scenes in session
