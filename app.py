@@ -33,8 +33,7 @@ def process_video():
     if not scene_frames:
         return jsonify({'error': 'Failed to extract frames'}), 500
 
-    # Mock descriptions based on category choice for demo
-    description_phrases = {
+   description_phrases = {
         "1": ["Mountain biker doing a downhill run", "Rider jumping over an obstacle", "Cyclist on a rocky trail", "Biking through forest trails", "MTB stunt on a dirt path",
             "Close-up of a mountain bike wheel", "Mountain biker navigating a sharp turn", "First-person view of a bike ride", "Mountain biker doing a trick jump", "Biking fast down a steep incline",
             "Biker with a helmet on talking to the camera", "People standing around", "a person facing and talking to the camera", "Introducing the context for a video", "a zoomed-out scene of nature without any people in it",
@@ -64,7 +63,7 @@ def process_video():
         'first_frame': base64.b64encode(cv2.imencode('.jpg', scene['first_frame'])[1]).decode()
     } for scene in best_clips]
 
-    return jsonify(scene_details)
+    return jsonify({'clips': scene_details})
 
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
