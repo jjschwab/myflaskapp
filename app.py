@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 import video_processing_refactored as vp
 import json
 import os
+import base64
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -48,31 +49,21 @@ def process_video():
     }
 
     categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases[category_choice])
-
     action_scenes = [scene for scene in categorized_scenes.values() if scene['category'] == 'Action Scene']
-    top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:10]
+    top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:20]
     best_clips = sorted(top_action_scenes, key=lambda x: x['duration'], reverse=True)[:10]
 
-    Scene_info=[]
-    for index, scene in enumerate(best_clips):
-            scene_number = list(categorized_scenes.keys())[list(categorized_scenes.values()).index(scene)] + 1
-            print(f"Clip {index + 1}: Scene Number {scene_number}, Duration: {scene['duration']}s, Start: {scene['start_time']}, End: {scene['end_time']}, Best Description: '{scene['best_description']}'")
-            Scene_info.append(scene_number)
-    if Scene_info:
-        return jsonify(Scene_info)
+    scene_details = [{
+        'scene_number': list(categorized_scenes.keys())[list(categorized_scenes.values()).index(scene)] + 1,
+        'duration': scene['duration'],
+        'start_time': scene['start_time'],
+        'end_time': scene['end_time'],
+        'description': scene['best_description'],
+        'first_frame': base64.b64encode(cv2.imencode('.jpg', scene['first_frame'])[1]).decode()
+    } for scene in best_clips]
 
-    
-    clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(best_clips)]
-    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
+    return jsonify(scene_details)
 
-    if 'path' not in final_video_info:
-        return jsonify({'error': 'Failed to process final video'}), 500
-
-    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_info['path'])})
-
-@app.route('/downloads/<path:filename>', methods=['GET'])
-def download(filename):
-    return send_from_directory(app.static_folder, filename, as_attachment=True)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
