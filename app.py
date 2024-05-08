@@ -15,8 +15,8 @@ def home():
 def process_video():
     data = request.get_json()
     video_url = data.get('video_url')
-    category_choice = data.get('category_choice')  # This fetches the category choice from the client
-
+    category_choice = data.get('category_choice')
+    
     if not video_url:
         return jsonify({'error': 'No video URL provided'}), 400
     
@@ -26,8 +26,6 @@ def process_video():
 
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
-
-    # Description phrases based on category choice
     description_phrases = {
         "1": ["Mountain biker doing a downhill run", "Rider jumping over an obstacle", "Cyclist on a rocky trail", "Biking through forest trails", "MTB stunt on a dirt path",
             "Close-up of a mountain bike wheel", "Mountain biker navigating a sharp turn", "First-person view of a bike ride", "Mountain biker doing a trick jump", "Biking fast down a steep incline",
@@ -42,14 +40,8 @@ def process_video():
             "Surfers lounging on the beach", "Paddling to catch a wave", "a surfer surveying the waves sitting on their surfboard", "People standing holding their surfboards",
             "Standing on the beach", "Interviewing a surfer after their performance", "multiple faces in the frame", "Surfer paddling out to get ready for a wave",
             "Surfer in the water sitting on their surfboard", "Beginner surfer struggling to stand on their board"]
-    }
-
-    if category_choice in description_phrases:
-        selected_phrases = description_phrases[category_choice]
-    else:
-        return jsonify({'error': 'Invalid category choice'}), 400
-
-    scene_categories = vp.classify_and_categorize_scenes(scene_frames, selected_phrases)
+    }[category_choice]
+    scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
 
     results = []
     for scene_id, scene_info in scene_categories.items():
@@ -65,11 +57,21 @@ def process_video():
             'image': encoded_image
         })
 
-    # Selecting top action scenes
-    action_scenes = [scene for scene in results if scene['category'] == 'Action Scene']
-    top_action_scenes = sorted(action_scenes, key=lambda x: x['confidence'], reverse=True)[:10]
+    return jsonify({'all_scenes': results, 'top_action_scenes': sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]})
 
-    return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
+@app.route('/concatenate_clips', methods=['POST'])
+def concatenate_clips():
+    data = request.get_json()
+    video_url = data['video_url']
+    selected_indices = data['selected_indices']
+
+    video_path = vp.download_video(video_url)
+    scenes = vp.find_scenes(video_path)
+    scene_frames = vp.extract_frames(video_path, scenes)
+    clip_paths = [vp.save_clip(video_path, scene_frames[int(index)], os.path.join(app.static_folder, 'videos'), int(index))['path'] for index in selected_indices]
+
+    final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))['path']
+    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path)})
 
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
@@ -77,6 +79,7 @@ def download(filename):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
 
 
 
