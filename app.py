@@ -59,7 +59,7 @@ def process_video():
             print(f"Clip {index + 1}: Scene Number {scene_number}, Duration: {scene['duration']}s, Start: {scene['start_time']}, End: {scene['end_time']}, Best Description: '{scene['best_description']}'")
             Scene_info.append(scene_number)
     if Scene_info:
-        return jsonify(Scene_info.tolist())
+        return jsonify(Scene_info)
 
     
     clip_paths = [vp.save_clip(video_path, scene, os.path.join(app.static_folder, 'videos'), index)['path'] for index, scene in enumerate(best_clips)]
