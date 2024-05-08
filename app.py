@@ -33,7 +33,7 @@ def process_video():
     if not scene_frames:
         return jsonify({'error': 'Failed to extract frames'}), 500
 
-   description_phrases = {
+    description_phrases = {
         "1": ["Mountain biker doing a downhill run", "Rider jumping over an obstacle", "Cyclist on a rocky trail", "Biking through forest trails", "MTB stunt on a dirt path",
             "Close-up of a mountain bike wheel", "Mountain biker navigating a sharp turn", "First-person view of a bike ride", "Mountain biker doing a trick jump", "Biking fast down a steep incline",
             "Biker with a helmet on talking to the camera", "People standing around", "a person facing and talking to the camera", "Introducing the context for a video", "a zoomed-out scene of nature without any people in it",
