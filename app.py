@@ -68,20 +68,23 @@ def process_video():
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
     data = request.get_json()
+    video_url = data['video_url']
     selected_indices = data['selected_indices']
 
-    if 'top_action_scenes' not in session or 'video_path' not in session:
-        return jsonify({'error': 'Session expired or invalid video data'}), 500
+    video_path = vp.download_video(video_url)
+    scenes = vp.find_scenes(video_path)
+    scene_frames = vp.extract_frames(video_path, scenes)
+    description_phrases = ["Your", "Description", "Phrases"]  # Assume some descriptions
+    categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
+    top_action_scenes = sorted([scene for scene in categorized_scenes if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
 
-    top_action_scenes = session['top_action_scenes']
-    video_path = session['video_path']
+    try:
+        clip_paths = [vp.save_clip(video_path, top_action_scenes[int(index)]['frames'], os.path.join(app.static_folder, 'videos'), int(index))['path'] for index in selected_indices if 0 <= int(index) < len(top_action_scenes)]
+    except IndexError:
+        return jsonify({'error': 'Selected index out of range'}), 400
 
-    # Filter clips based on selected indices
-    clip_paths = []
-    for index in selected_indices:
-        scene_info = top_action_scenes[int(index)]
-        clip_path_info = vp.save_clip(video_path, scene_info, os.path.join(app.static_folder, 'videos'), int(index))
-        clip_paths.append(clip_path_info['path'])
+    if not clip_paths:
+        return jsonify({'error': 'No valid clips selected or clips could not be saved.'}), 500
 
     final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))['path']
     return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path)})
