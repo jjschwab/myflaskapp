@@ -55,7 +55,7 @@ def process_video():
             'end_time': scene_info['end_time'],
             'duration': scene_info['duration'],
             'best_description': scene_info['best_description'],
-            'first_frame': scene_info['first_frame']  # Keep the raw frame for processing
+            'image': encoded_image,  # For display
 
         })
 
@@ -94,7 +94,8 @@ def concatenate_clips():
             'end_time': scene_info['end_time'],
             'duration': scene_info['duration'],
             'best_description': scene_info['best_description'],
-            'image': encoded_image
+            'image': encoded_image,  # For display
+            'first_frame': scene_info['first_frame']  # Keep the raw frame for processing
         })
 
     top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
