@@ -70,7 +70,7 @@
             const clipsSection = document.getElementById('clipsSection');
             clipsSection.innerHTML = '<h2>Top 10 best video clips:</h2>';
             clips.forEach((clip, index) => {
-                clipsSection.innerHTML += `<div>Clip ${index + 1}: Scene Number ${clip.scene_number}, Duration: ${clip.duration}s, Start: ${clip.start_time}, End: ${clip.end_time}, Description: '${clip.best_description}'</div>`;
+                clipsSection.innerHTML += `<div>Clip ${index + 1}: Scene Number ${clip.scene_index}, Duration: ${clip.duration}s, Start: ${clip.start_time}, End: ${clip.end_time}, Description: '${clip.best_description}'</div>`;
             });
             document.getElementById('concatSection').style.display = 'block';
         }
