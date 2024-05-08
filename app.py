@@ -112,9 +112,9 @@ def concatenate_clips():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-     final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
-     if 'path' not in final_video_path:
-         return jsonify({'error': 'Failed to process final video'}), 500
+    final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
+    if 'path' not in final_video_path:
+        return jsonify({'error': 'Failed to process final video'}), 500
 
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
