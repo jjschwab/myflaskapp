@@ -74,7 +74,10 @@ def concatenate_clips():
     video_path = vp.download_video(video_url)
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
-    description_phrases = ["Your", "Description", "Phrases"]  # Assume some descriptions
+    description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
+            "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
+            "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
+            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"]  # Assume some descriptions
     categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
     top_action_scenes = sorted([scene for scene in categorized_scenes if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
 
