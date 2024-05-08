@@ -12,17 +12,12 @@
 </head>
 <body>
     <h1>Video Processing Portal</h1>
-
-    <!-- Form to submit video URL -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" required placeholder="https://">
         <button type="submit">Process Video</button>
     </form>
-
-    <!-- Section to display results -->
     <div id="results"></div>
-
     <script>
         document.getElementById('videoForm').onsubmit = async function(e) {
             e.preventDefault();
@@ -37,8 +32,22 @@
 
             if (response.ok) {
                 const data = await response.json();
-                let htmlContent = 'Scenes Found:<br>';
-                data.forEach(scene => {
+                let htmlContent = 'All Scenes Found:<br>';
+                data.all_scenes.forEach(scene => {
+                    htmlContent += `
+                        <div>
+                            <p>Scene: ${scene.scene_id}</p>
+                            <p>Category: ${scene.category}</p>
+                            <p>Confidence: ${scene.confidence.toFixed(2)}</p>
+                            <p>Start Time: ${scene.start_time}</p>
+                            <p>End Time: ${scene.end_time}</p>
+                            <p>Duration: ${scene.duration.toFixed(2)} seconds</p>
+                            <p>Description: ${scene.best_description}</p>
+                            <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
+                        </div>`;
+                });
+                htmlContent += '<h2>Top 10 Action Scenes:</h2>';
+                data.top_action_scenes.forEach(scene => {
                     htmlContent += `
                         <div>
                             <p>Scene: ${scene.scene_id}</p>
