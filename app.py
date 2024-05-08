@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, session
 import video_processing_refactored as vp
 import json
 import os
@@ -6,6 +6,7 @@ import cv2
 import base64
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
+app.secret_key = 'your_secret_key_here'  # Necessary for session management
 
 @app.route('/')
 def home():
@@ -57,18 +58,30 @@ def process_video():
             'image': encoded_image
         })
 
-    return jsonify({'all_scenes': results, 'top_action_scenes': sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]})
+    # Store top action scenes in session
+    top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
+    session['top_action_scenes'] = top_action_scenes
+    session['video_path'] = video_path  # Store video path for later use
+
+    return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
 
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
     data = request.get_json()
-    video_url = data['video_url']
     selected_indices = data['selected_indices']
 
-    video_path = vp.download_video(video_url)
-    scenes = vp.find_scenes(video_path)
-    scene_frames = vp.extract_frames(video_path, scenes)
-    clip_paths = [vp.save_clip(video_path, scene_frames[int(index)], os.path.join(app.static_folder, 'videos'), int(index))['path'] for index in selected_indices]
+    if 'top_action_scenes' not in session or 'video_path' not in session:
+        return jsonify({'error': 'Session expired or invalid video data'}), 500
+
+    top_action_scenes = session['top_action_scenes']
+    video_path = session['video_path']
+
+    # Filter clips based on selected indices
+    clip_paths = []
+    for index in selected_indices:
+        scene_info = top_action_scenes[int(index)]
+        clip_path_info = vp.save_clip(video_path, scene_info, os.path.join(app.static_folder, 'videos'), int(index))
+        clip_paths.append(clip_path_info['path'])
 
     final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))['path']
     return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path)})
@@ -79,8 +92,3 @@ def download(filename):
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-
-
-
-
-
