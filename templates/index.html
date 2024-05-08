@@ -13,23 +13,24 @@
 </head>
 <body>
     <h1>Video Processing Portal</h1>
+
+    <!-- Form to submit video information -->
     <form id="videoForm">
         <label for="videoUrl">Enter YouTube video URL:</label>
         <input type="text" id="videoUrl" name="videoUrl" required placeholder="https://">
+
         <label for="categoryChoice">Select Video Category:</label>
         <select id="categoryChoice">
             <option value="1">Mountain Biking</option>
             <option value="2">Skiing</option>
             <option value="3">Surfing</option>
         </select>
-        <button type="button" onclick="processVideo()">Process Video</button>
+
+        <button type="submit">Process Video</button>
     </form>
 
-    <!-- Section to display results -->
+    <!-- Section to display results or status -->
     <div id="results">Results will appear here...</div>
-
-    <!-- Section to display the top 10 best clips -->
-    <div id="clipsSection"></div>
 
     <!-- Section for user to select clips for concatenation -->
     <div id="concatSection" style="display:none;">
@@ -38,10 +39,12 @@
         <button type="button" onclick="concatenateClips()">Concatenate Clips</button>
     </div>
 
+    <!-- Link to download the video -->
     <a id="downloadLink" style="display:none;">Download Video</a>
 
     <script>
-        async function processVideo() {
+        document.getElementById('videoForm').onsubmit = async function(e) {
+            e.preventDefault();
             const videoUrl = document.getElementById('videoUrl').value;
             const categoryChoice = document.getElementById('categoryChoice').value;
             document.getElementById('results').innerHTML = 'Processing video...';
@@ -56,7 +59,36 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    displayClips(data.clips);
+                    let htmlContent = '<h2>All Scenes:</h2>';
+                    data.all_scenes.forEach(scene => {
+                        htmlContent += `
+                            <div>
+                                <p>Scene: ${scene.scene_id}</p>
+                                <p>Category: ${scene.category}</p>
+                                <p>Confidence: ${scene.confidence.toFixed(2)}</p>
+                                <p>Start Time: ${scene.start_time}</p>
+                                <p>End Time: ${scene.end_time}</p>
+                                <p>Duration: ${scene.duration.toFixed(2)} seconds</p>
+                                <p>Description: ${scene.best_description}</p>
+                                <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
+                            </div>`;
+                    });
+                    htmlContent += '<h2>Top 10 Action Scenes:</h2>';
+                    data.top_action_scenes.forEach(scene => {
+                        htmlContent += `
+                            <div>
+                                <p>Scene: ${scene.scene_id}</p>
+                                <p>Category: ${scene.category}</p>
+                                <p>Confidence: ${scene.confidence.toFixed(2)}</p>
+                                <p>Start Time: ${scene.start_time}</p>
+                                <p>End Time: ${scene.end_time}</p>
+                                <p>Duration: ${scene.duration.toFixed(2)} seconds</p>
+                                <p>Description: ${scene.best_description}</p>
+                                <img src="data:image/jpeg;base64,${scene.image}" alt="Scene Image">
+                            </div>`;
+                    });
+                    document.getElementById('results').innerHTML = htmlContent;
+                    document.getElementById('concatSection').style.display = 'block';
                 } else {
                     const errorText = await response.text();
                     document.getElementById('results').innerHTML = 'Error: ' + errorText;
@@ -64,16 +96,7 @@
             } catch (error) {
                 document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
             }
-        }
-
-        function displayClips(clips) {
-            const clipsSection = document.getElementById('clipsSection');
-            clipsSection.innerHTML = '<h2>Top 10 best video clips:</h2>';
-            clips.forEach((clip, index) => {
-                clipsSection.innerHTML += `<div>Clip ${index + 1}: Scene Number ${clip.scene_id}, Duration: ${clip.duration}s, Start: ${clip.start_time}, End: ${clip.end_time}, Description: '${clip.best_description}'</div>`;
-            });
-            document.getElementById('concatSection').style.display = 'block';
-        }
+        };
 
         async function concatenateClips() {
             const clipIndices = document.getElementById('clipIndices').value.split(',').map(Number);
