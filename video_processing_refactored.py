@@ -161,8 +161,7 @@ def process_video(clip_paths, output_path, caption=None, audio_url=None):
     return {"path": output_path}
 
 def download_audio(url, output_directory='static/video'):
-    yt = YouTube(url)
-    audio_stream = yt.streams.filter(only_audio=True).first()
+    audio_path = download_video(audio_url)
     if audio_stream:
         # Ensure the output directory exists
         os.makedirs(output_directory, exist_ok=True)
@@ -170,7 +169,7 @@ def download_audio(url, output_directory='static/video'):
         output_filename = datetime.now().strftime('%Y%m%d%H%M%S') + '_audio.mp4'
         output_path = os.path.join(output_directory, output_filename)
         return audio_stream.download(filename=output_path)
-    return None
+
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
