@@ -165,15 +165,8 @@ def process_video(clip_paths, output_path, caption=None, audio_link=None):
     final_clip.close()
     print("Video processing complete. Output saved to:", output_path)
     return {"path": output_path}
-def download_audio(url, output_directory='static/video'):
-    audio_path = download_video(audio_url)
-    if audio_stream:
-        # Ensure the output directory exists
-        os.makedirs(output_directory, exist_ok=True)
-        # Use a timestamp to avoid naming conflicts
-        output_filename = datetime.now().strftime('%Y%m%d%H%M%S') + '_audio.mp4'
-        output_path = os.path.join(output_directory, output_filename)
-        return audio_stream.download(filename=output_path)
+    
+
 
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
