@@ -71,6 +71,7 @@ def concatenate_clips():
     video_url = data['video_url']
     selected_indices = data['selected_indices']
     caption_text = data.get('caption_text', '')  # Optional caption text
+    audio_url = data.get('audio_url', None)  # Optional audio URL
 
 
     video_path = vp.download_video(video_url)
@@ -118,7 +119,7 @@ def concatenate_clips():
     
 
     # Assuming video_path and clip_paths are determined earlier in your code
-    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'), caption=caption_text)
+    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'), caption=caption_text, audio_url=audio_url)
 
     if 'path' not in final_video_info:
         return jsonify({'error': 'Failed to process final video'}), 500
