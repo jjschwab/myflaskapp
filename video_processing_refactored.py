@@ -150,6 +150,12 @@ def process_video(clip_paths, output_path, caption=None):
         # Apply caption to each frame of the final clip
         final_clip = final_clip.fl_image(lambda frame: add_text_with_opencv(frame, caption))
 
+    if audio_url:
+        audio_path = download_audio(audio_url)  # Function to be implemented
+        if audio_path:
+            audio_clip = AudioFileClip(audio_path).set_duration(final_clip.duration)
+            final_clip = final_clip.set_audio(audio_clip)
+
     final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac', verbose=False)
     final_clip.close()
     print("Video processing complete. Output saved to:", output_path)
