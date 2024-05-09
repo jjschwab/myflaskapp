@@ -7,6 +7,8 @@ from pytube import YouTube
 from scenedetect import VideoManager, SceneManager
 from scenedetect.detectors import ContentDetector
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
+from moviepy.video.fx import all
+
 import logging
 import base64
 import numpy as np
@@ -130,6 +132,7 @@ def classify_and_categorize_scenes(scene_frames, description_phrases):
     return scene_categories
 
 def add_text_with_opencv(frame, text, font_scale=2.0, font=cv2.FONT_HERSHEY_COMPLEX, color=(255, 255, 0), thickness=3):
+    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
     text_size, _ = cv2.getTextSize(text, font, font_scale, thickness)
     text_width, text_height = text_size
 
@@ -137,21 +140,19 @@ def add_text_with_opencv(frame, text, font_scale=2.0, font=cv2.FONT_HERSHEY_COMP
     text_y = (frame.shape[0] + text_height) // 2
     cv2.rectangle(frame, (text_x, text_y - text_height - 10), (text_x + text_width, text_y + 10), (0, 0, 0), -1)
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
-    return frame
-
-def process_video(clip_paths, output_path):
-    if not clip_paths:
-        return {"error": "No clips to process"}
+    return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     
-    clips = [VideoFileClip(path) for path in clip_paths if os.path.exists(path)]
-    if not clips:
-        return {"error": "No valid clips found"}
-
+def process_video(clip_paths, output_path, caption=None):
+    clips = [VideoFileClip(path) for path in clip_paths]
     final_clip = concatenate_videoclips(clips, method="compose")
+
+    if caption:
+        # Apply caption to each frame of the final clip
+        final_clip = final_clip.fl_image(lambda frame: add_text_with_opencv(frame, caption))
+
     final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac', verbose=False)
     final_clip.close()
-    
-    return {"path": output_path}
+    print("Video processing complete. Output saved to:", output_path)
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
