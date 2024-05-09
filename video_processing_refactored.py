@@ -161,6 +161,12 @@ def process_video(clip_paths, output_path, caption=None):
     print("Video processing complete. Output saved to:", output_path)
     return {"path": output_path}
 
+def download_audio(url):
+    yt = YouTube(url)
+    audio_stream = yt.streams.filter(only_audio=True).first()
+    if audio_stream:
+        return audio_stream.download(output_path="path_to_temp_audio")  # Adjust path as needed
+    return None
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
@@ -187,32 +193,6 @@ def save_clip(video_path, scene_info, output_directory, scene_id):
     except Exception as e:
         logging.error(f"An error occurred while saving the clip: {e}")
         return None
-
-def main():
-    video_url = "https://example.com/path/to/video"
-    try:
-        print("Downloading video...")
-        video_path = download_video(video_url)
-        print("Finding scenes...")
-        scenes = find_scenes(video_path)
-        print("Extracting frames...")
-        scene_frames = extract_frames(video_path, scenes)
-        print("Classifying scenes...")
-        scene_categories = classify_scenes(scene_frames, ["Some", "Description", "Phrases"])
-        
-        for scene_id, info in scene_categories.items():
-            print(f"Scene {scene_id}: {info}")
-        
-        # Process and save a sample clip if scenes were detected
-        if scene_categories:
-            scene_info = next(iter(scene_categories.values()))
-            print("Saving clip...")
-            saved_info = save_clip(video_path, scene_info, BASE_DIRECTORY, 1)
-            print(f"Clip saved at {saved_info['path']}")
-            print("Processing video with added text...")
-            process_video([saved_info['path']], os.path.join(BASE_DIRECTORY, "final_output.mp4"), caption="Processed Video")
-    except Exception as e:
-        print(f"Error processing video: {str(e)}")
 
 
 def convert_timestamp_to_seconds(timestamp):
