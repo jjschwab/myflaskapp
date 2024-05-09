@@ -70,6 +70,8 @@ def concatenate_clips():
     data = request.get_json()
     video_url = data['video_url']
     selected_indices = data['selected_indices']
+    caption_text = data.get('caption_text', '')  # Optional caption text
+
 
     video_path = vp.download_video(video_url)
     scenes = vp.find_scenes(video_path)
@@ -115,11 +117,13 @@ def concatenate_clips():
         return jsonify({'error': str(e)}), 500
     
 
-    final_video_path = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'))
-    if 'path' not in final_video_path:
+    # Assuming video_path and clip_paths are determined earlier in your code
+    final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'), caption=caption_text)
+
+    if 'path' not in final_video_info:
         return jsonify({'error': 'Failed to process final video'}), 500
 
-    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_path['path'])})
+    return jsonify({'message': 'Video processed successfully', 'video_filename': os.path.basename(final_video_info['path'])})
 
 @app.route('/downloads/<path:filename>', methods=['GET'])
 def download(filename):
