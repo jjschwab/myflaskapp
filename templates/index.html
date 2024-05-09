@@ -103,46 +103,47 @@
         };
 
         async function concatenateClips() {
-            const clipIndicesInput = document.getElementById('clipIndices').value.trim();
-            const captionText = document.getElementById('captionText').value.trim(); // Get the caption text
+    const clipIndicesInput = document.getElementById('clipIndices').value.trim();
+    const captionText = document.getElementById('captionText').value.trim(); // Get the caption text
+    const audioUrl = document.getElementById('audioUrl').value.trim(); // Get the optional audio URL
 
-            if (!clipIndicesInput) {
-                alert('Please enter the indices of the clips you want to concatenate.');
-                return;
-            }
+    if (!clipIndicesInput) {
+        alert('Please enter the indices of the clips you want to concatenate.');
+        return;
+    }
 
-            const clipIndices = clipIndicesInput.split(',').map(Number).filter(n => !isNaN(n) && n > 0);
-            if (clipIndices.length === 0) {
-                alert('Invalid indices provided. Please enter valid numeric indices separated by commas.');
-                return;
-            }
+    const clipIndices = clipIndicesInput.split(',').map(Number).filter(n => !isNaN(n) && n > 0);
+    if (clipIndices.length === 0) {
+        alert('Invalid indices provided. Please enter valid numeric indices separated by commas.');
+        return;
+    }
 
-            const videoUrl = document.getElementById('videoUrl').value;
-            document.getElementById('results').innerHTML = 'Concatenating selected clips...';
+    const videoUrl = document.getElementById('videoUrl').value;
+    document.getElementById('results').innerHTML = 'Concatenating selected clips...';
 
-            try {
-                const response = await fetch('/concatenate_clips', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ video_url: videoUrl, selected_indices: clipIndices, caption_text: captionText })
-                });
+    try {
+        const response = await fetch('/concatenate_clips', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ video_url: videoUrl, selected_indices: clipIndices, caption_text: captionText, audio_url: audioUrl })
+        });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
-                    const downloadLink = document.getElementById('downloadLink');
-                    downloadLink.href = `/downloads/${data.video_filename}`;
-                    downloadLink.download = data.video_filename;  // Suggest a filename for download
-                    downloadLink.textContent = 'Download Video';
-                    downloadLink.style.display = 'block';
-                } else {
-                    const errorText = await response.text();
-                    document.getElementById('results').innerHTML = 'Error: ' + errorText;
-                }
-            } catch (error) {
-                document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
-            }
+        if (response.ok) {
+            const data = await response.json();
+            document.getElementById('results').innerHTML = `<video width="320" height="240" controls src="/static/videos/${data.video_filename}"></video>`;
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = `/downloads/${data.video_filename}`;
+            downloadLink.download = data.video_filename;  // Suggest a filename for download
+            downloadLink.textContent = 'Download Video';
+            downloadLink.style.display = 'block';
+        } else {
+            const errorText = await response.text();
+            document.getElementById('results').innerHTML = 'Error: ' + errorText;
         }
+    } catch (error) {
+        document.getElementById('results').innerHTML = 'Network or server error: ' + error.message;
+    }
+}
     </script>
 </body>
 </html>
