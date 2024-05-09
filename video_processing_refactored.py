@@ -141,7 +141,7 @@ def add_text_with_opencv(frame, text, font_scale=2.0, font=cv2.FONT_HERSHEY_COMP
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     
-def process_video(clip_paths, output_path, caption=None, audio_url=None):
+def process_video(clip_paths, output_path, caption=None, audio_link=None):
     clips = [VideoFileClip(path) for path in clip_paths]
     final_clip = concatenate_videoclips(clips, method="compose")
 
