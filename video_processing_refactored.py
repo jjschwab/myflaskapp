@@ -153,6 +153,8 @@ def process_video(clip_paths, output_path, caption=None):
     final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac', verbose=False)
     final_clip.close()
     print("Video processing complete. Output saved to:", output_path)
+    return {"path": output_path}
+
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
