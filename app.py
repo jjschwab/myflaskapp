@@ -17,7 +17,8 @@ def process_video():
     data = request.get_json()
     video_url = data.get('video_url')
     category_choice = data.get('category_choice')
-    
+    custom_phrases = [data.get(f'customPhrase{i+1}', None) for i in range(5)]  # Fetch up to five custom phrases
+
     if not video_url:
         return jsonify({'error': 'No video URL provided'}), 400
     
@@ -42,6 +43,12 @@ def process_video():
             "Standing on the beach", "Interviewing a surfer after their performance", "multiple faces in the frame", "Surfer paddling out to get ready for a wave",
             "Surfer in the water sitting on their surfboard", "Beginner surfer struggling to stand on their board"]
     }[category_choice]
+
+    # Replace the first few phrases with custom phrases if provided
+    for i, phrase in enumerate(custom_phrases):
+        if phrase:  # Only replace if a custom phrase was actually provided
+            description_phrases[i] = phrase
+    
     scene_categories = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
 
     results = []
