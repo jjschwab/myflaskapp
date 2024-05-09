@@ -8,7 +8,6 @@ from scenedetect import VideoManager, SceneManager
 from scenedetect.detectors import ContentDetector
 from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
 from moviepy.video.fx import all
-
 import logging
 import base64
 import numpy as np
@@ -165,7 +164,7 @@ def download_audio(url):
     yt = YouTube(url)
     audio_stream = yt.streams.filter(only_audio=True).first()
     if audio_stream:
-        return audio_stream.download(output_path="path_to_temp_audio")  # Adjust path as needed
+        return audio_stream.download(output_path="static/videos")  # Adjust path as needed
     return None
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
