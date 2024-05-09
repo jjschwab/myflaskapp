@@ -73,7 +73,15 @@
                 const response = await fetch('/process_video', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({video_url: videoUrl, category_choice: categoryChoice})
+                    body: JSON.stringify({
+                        video_url: videoUrl,
+                        category_choice: categoryChoice,
+                        customPhrase1: document.getElementById('customPhrase1').value,
+                        customPhrase2: document.getElementById('customPhrase2').value,
+                        customPhrase3: document.getElementById('customPhrase3').value,
+                        customPhrase4: document.getElementById('customPhrase4').value,
+                        customPhrase5: document.getElementById('customPhrase5').value
+                    })
                 });
 
                 if (response.ok) {
