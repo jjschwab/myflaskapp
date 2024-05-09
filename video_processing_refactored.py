@@ -141,7 +141,7 @@ def add_text_with_opencv(frame, text, font_scale=2.0, font=cv2.FONT_HERSHEY_COMP
     cv2.putText(frame, text, (text_x, text_y), font, font_scale, color, thickness, cv2.LINE_AA)
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     
-def process_video(clip_paths, output_path, caption=None, audio_link=None):
+def process_video(clip_paths, output_path, caption=None, audio_path=None):
     print("Starting video processing...")
     clips = [VideoFileClip(path) for path in clip_paths]
     final_clip = concatenate_videoclips(clips, method="compose")
@@ -150,24 +150,15 @@ def process_video(clip_paths, output_path, caption=None, audio_link=None):
         print("Adding caption...")
         final_clip = final_clip.fl_image(lambda frame: add_text_with_opencv(frame, caption))
 
-    if audio_link:
-        print(f"Downloading audio from {audio_link}...")
-        audio_path = download_video(audio_link)  # This should be a function that specifically handles audio
-        if audio_path and os.path.exists(audio_path):
-            print(f"Audio downloaded at {audio_path}, adding to video...")
-            audio_clip = AudioFileClip(audio_path).set_duration(final_clip.duration)
-            final_clip = final_clip.set_audio(audio_clip)
-        else:
-            print("Failed to download or find audio file.")
+    if audio_path:
+        audio_clip = AudioFileClip(audio_path).set_duration(final_clip.duration)
+        final_clip = final_clip.set_audio(audio_clip)
 
     print(f"Writing final video to {output_path}...")
     final_clip.write_videofile(output_path, codec='libx264', audio_codec='aac', verbose=False)
     final_clip.close()
     print("Video processing complete. Output saved to:", output_path)
     return {"path": output_path}
-    
-
-
 
 def save_clip(video_path, scene_info, output_directory, scene_id):
     # Ensure the output directory exists
