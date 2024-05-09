@@ -151,6 +151,7 @@ def process_video(clip_paths, output_path, caption=None, audio_path=None):
         final_clip = final_clip.fl_image(lambda frame: add_text_with_opencv(frame, caption))
 
     if audio_path:
+        print("Adding audio overlay..."
         audio_clip = AudioFileClip(audio_path).set_duration(final_clip.duration)
         final_clip = final_clip.set_audio(audio_clip)
 
