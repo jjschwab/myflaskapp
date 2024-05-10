@@ -84,8 +84,9 @@ def concatenate_clips():
     caption_text = data.get('caption_text', '')  # Optional caption text
     audio_url = data.get('audio_url', None)  # Optional audio URL
 
-    video_path = global_video_path
-    
+    global global_top_action_scenes
+    global global_video_path
+
     audio_path = None  # Initialize audio_path
     if audio_url:
         audio_path = vp.download_video(audio_url)  # Download the audio file if URL is provided
@@ -93,18 +94,14 @@ def concatenate_clips():
     if audio_url and not audio_path:
         return jsonify({'error': 'Failed to download audio'}), 400
     
-
-
-    top_action_scenes = global_top_action_scenes
-    
     try:
         clip_paths = []
         for index in selected_indices:
             index = int(index)  # Ensure index is an integer
-            if index < 0 or index >= len(top_action_scenes):
+            if index < 0 or index >= len(global_top_action_scenes):
                 return jsonify({'error': f'Index {index} out of range'}), 400
-            scene_info = top_action_scenes[index]
-            clip_info = vp.save_clip(video_path, scene_info, os.path.join(app.static_folder, 'videos'), index)
+            scene_info = global_top_action_scenes[index]
+            clip_info = vp.save_clip(global_video_path, scene_info, os.path.join(app.static_folder, 'videos'), index)
             if clip_info is None:
                 return jsonify({'error': 'Failed to save some clips'}), 500
             clip_paths.append(clip_info['path'])
