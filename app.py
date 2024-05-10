@@ -6,7 +6,7 @@ import cv2
 import base64
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.secret_key = 'your_secret_key_here'  # Necessary for session management
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 @app.route('/')
 def home():
