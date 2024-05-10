@@ -28,6 +28,7 @@ def process_video():
 
     scenes = vp.find_scenes(video_path)
     scene_frames = vp.extract_frames(video_path, scenes)
+    
     description_phrases = {
         "1": ["Mountain biker doing a downhill run", "Rider jumping over an obstacle", "Cyclist on a rocky trail", "Biking through forest trails", "MTB stunt on a dirt path",
             "Close-up of a mountain bike wheel", "Mountain biker navigating a sharp turn", "First-person view of a bike ride", "Mountain biker doing a trick jump", "Biking fast down a steep incline",
@@ -68,7 +69,8 @@ def process_video():
 
     # Store top action scenes in session
     top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
-    
+    session['top_action_scenes'] = [sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]]
+    session['video_path'] = video_path
 
     return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
 
@@ -80,43 +82,19 @@ def concatenate_clips():
     caption_text = data.get('caption_text', '')  # Optional caption text
     audio_url = data.get('audio_url', None)  # Optional audio URL
 
-    video_path = vp.download_video(video_url)
+    video_path = session['video_path']
+    
     audio_path = None  # Initialize audio_path
     if audio_url:
         audio_path = vp.download_video(audio_url)  # Download the audio file if URL is provided
 
-    if not video_path:
-        return jsonify({'error': 'Failed to download video'}), 400
     if audio_url and not audio_path:
         return jsonify({'error': 'Failed to download audio'}), 400
+    
+    if 'top_action_scenes' not in session:
+        return jsonify({'error': 'No processed video data available'}), 400
 
-    scenes = vp.find_scenes(video_path)
-    scene_frames = vp.extract_frames(video_path, scenes)
-    
-    description_phrases = ["Skier jumping off a snow ramp", "Person skiing down a snowy mountain", "Close-up of skis on snow", "Skiing through a snowy forest", "Skier performing a spin",
-            "Point-of-view shot from a ski helmet", "Group of skiers on a mountain", "Skier sliding on a rail", "Snow spraying from skis", "Skier in mid-air during a jump",
-            "Person being interviewed after an event", "People in a crowd cheering", "Sitting inside of a vehicle", "Skaters standing around a ramp", "People standing around at an event",
-            "Commercial break", "People having a conversation", "Person in a helmet talking to the camera", "person facing the camera", "People introducing the context for a video"]  # Assume some descriptions
-    
-    categorized_scenes = vp.classify_and_categorize_scenes(scene_frames, description_phrases)
-    
-    results = []
-    
-    for scene_id, scene_info in categorized_scenes.items():
-        encoded_image = base64.b64encode(cv2.imencode('.jpg', scene_info['first_frame'])[1]).decode()
-        results.append({
-            'scene_id': scene_id,
-            'category': scene_info['category'],
-            'confidence': scene_info['confidence'],
-            'start_time': scene_info['start_time'],
-            'end_time': scene_info['end_time'],
-            'duration': scene_info['duration'],
-            'best_description': scene_info['best_description'],
-            'image': encoded_image,  # For display
-            'first_frame': scene_info['first_frame']  # Keep the raw frame for processing
-        })
-
-    top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
+    top_action_scenes = session['top_action_scenes']
     
     try:
         clip_paths = []
