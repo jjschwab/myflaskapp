@@ -72,10 +72,9 @@ def process_video():
 
     global_video_path = video_path
 
-    top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
-    global_top_action_scenes = top_action_scenes
+    global_top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
 
-    return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
+    return jsonify({'all_scenes': results, 'top_action_scenes': global_top_action_scenes})
 
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
