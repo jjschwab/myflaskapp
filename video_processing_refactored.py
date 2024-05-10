@@ -181,7 +181,7 @@ def save_clip(video_path, scene_info, output_directory, scene_id):
             logging.error(f"Failed to save the clip at {output_filepath}")
             return None
 
-        return {"path": output_filepath, "first_frame": scene_info['first_frame']}
+        return {"path": output_filepath}
     
     except Exception as e:
         logging.error(f"An error occurred while saving the clip: {e}")
