@@ -16,6 +16,7 @@ def home():
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
+    global global_video_path, global_top_action_scenes
     data = request.get_json()
     video_url = data.get('video_url')
     category_choice = data.get('category_choice')
