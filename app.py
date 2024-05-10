@@ -78,22 +78,22 @@ def process_video():
 
 @app.route('/concatenate_clips', methods=['POST'])
 def concatenate_clips():
+    global global_video_path, global_top_action_scenes
+
     data = request.get_json()
-    video_url = data['video_url']
-    selected_indices = data['selected_indices']
+    selected_indices = data.get('selected_indices', [])
     caption_text = data.get('caption_text', '')  # Optional caption text
     audio_url = data.get('audio_url', None)  # Optional audio URL
 
-    global global_top_action_scenes
-    global global_video_path
+    if not global_video_path or not global_top_action_scenes:
+        return jsonify({'error': 'Video data not available, please process a video first.'}), 400
 
-    audio_path = None  # Initialize audio_path
+    audio_path = None
     if audio_url:
-        audio_path = vp.download_video(audio_url)  # Download the audio file if URL is provided
+        audio_path = vp.download_video(audio_url)
+        if not audio_path:
+            return jsonify({'error': 'Failed to download audio'}), 400
 
-    if audio_url and not audio_path:
-        return jsonify({'error': 'Failed to download audio'}), 400
-    
     try:
         clip_paths = []
         for index in selected_indices:
@@ -108,8 +108,6 @@ def concatenate_clips():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-
-    # Assuming video_path and clip_paths are determined earlier in your code
     final_video_info = vp.process_video(clip_paths, os.path.join(app.static_folder, 'videos', 'final_video.mp4'), caption=caption_text, audio_path=audio_path)
     if 'path' not in final_video_info:
         return jsonify({'error': 'Failed to process final video'}), 500
