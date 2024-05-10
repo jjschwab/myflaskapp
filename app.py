@@ -6,7 +6,9 @@ import cv2
 import base64
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+global_video_path = None
+global_top_action_scenes = None
 
 @app.route('/')
 def home():
@@ -67,9 +69,11 @@ def process_video():
 
         })
 
-    # Store top action scenes in session
+
+    global_video_path = video_path
+
     top_action_scenes = sorted([scene for scene in results if scene['category'] == 'Action Scene'], key=lambda x: x['confidence'], reverse=True)[:10]
- 
+    global_top_action_scenes = top_action_scenes
 
     return jsonify({'all_scenes': results, 'top_action_scenes': top_action_scenes})
 
@@ -81,7 +85,7 @@ def concatenate_clips():
     caption_text = data.get('caption_text', '')  # Optional caption text
     audio_url = data.get('audio_url', None)  # Optional audio URL
 
-    video_path = session['video_path']
+    video_path = global_video_path
     
     audio_path = None  # Initialize audio_path
     if audio_url:
@@ -90,10 +94,9 @@ def concatenate_clips():
     if audio_url and not audio_path:
         return jsonify({'error': 'Failed to download audio'}), 400
     
-    if 'top_action_scenes' not in session:
-        return jsonify({'error': 'No processed video data available'}), 400
 
-    top_action_scenes = session['top_action_scenes']
+
+    top_action_scenes = global_top_action_scenes
     
     try:
         clip_paths = []
